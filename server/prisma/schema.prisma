@@ -1,0 +1,426 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ─── ENUMS ────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  TRAVELER
+  OPERATOR
+  COORDINATOR
+  ADMIN
+}
+
+enum TripStatus {
+  DRAFT
+  PLANNING
+  BOOKED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+// ─── EXISTING MODELS (EXTENDED) ──────────────────────────────────────────────
+
+model User {
+  id                String             @id @default(uuid())
+  email             String             @unique
+  passwordHash      String
+  name              String
+  avatarUrl         String?
+  currency          String             @default("USD")
+  budgetAlerts      Boolean            @default(true)
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  // PS7: Role-based access
+  role              UserRole           @default(TRAVELER)
+  phone             String?
+  emergencyContact  String?
+  passportCountry   String?
+
+  // Existing relations
+  trips             Trip[]
+  savedDestinations SavedDestination[]
+
+  // PS7: New relations
+  bookings          Booking[]
+  tourGroupMembers  TourGroupMember[]
+  coordinatorGroups TourGroup[]        @relation("CoordinatorGroups")
+  changesInitiated  ItineraryChange[]  @relation("ChangesInitiated")
+  notifications     Notification[]
+  reviews           Review[]
+  preferences       TravelerPreference?
+}
+
+model City {
+  id          String             @id @default(uuid())
+  name        String
+  country     String
+  continent   String
+  image       String
+  description String
+  costIndex   Int                @default(3) // 1 to 5
+  popularity  Float              @default(4.8)
+  createdAt   DateTime           @default(now())
+
+  // Existing relations
+  activities  Activity[]
+  tripStops   TripStop[]
+  savedBy     SavedDestination[]
+
+  // PS7: New relations
+  hotels          Hotel[]
+  transportsFrom  Transport[]    @relation("TransportFrom")
+  transportsTo    Transport[]    @relation("TransportTo")
+}
+
+model Activity {
+  id             String         @id @default(uuid())
+  cityId         String
+  name           String
+  category       String         // Sightseeing, Food, Culture, Adventure, Shopping, Nature, Nightlife
+  cost           Float          @default(0)
+  durationHours  Float          @default(2.0)
+  image          String?
+  description    String?
+  rating         Float          @default(4.8)
+  createdAt      DateTime       @default(now())
+
+  // PS7: Vendor link
+  vendorId       String?
+
+  city           City           @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  vendor         Vendor?        @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  tripActivities TripActivity[]
+}
+
+model Trip {
+  id             String         @id @default(uuid())
+  userId         String
+  title          String
+  description    String?
+  coverImage     String?
+  startDate      DateTime
+  endDate        DateTime
+  budget         Float          @default(0)
+  currency       String         @default("USD")
+  shareSlug      String         @unique @default(uuid())
+  isPublic       Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  // PS7: Trip lifecycle & operator
+  status         TripStatus     @default(DRAFT)
+  operatorId     String?
+
+  // Existing relations
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stops          TripStop[]
+  tripActivities TripActivity[]
+  expenses       Expense[]
+  packingItems   PackingItem[]
+
+  // PS7: New relations
+  bookings       Booking[]
+  tourGroups     TourGroup[]
+  changes        ItineraryChange[]
+  reviews        Review[]
+}
+
+model TripStop {
+  id             String         @id @default(uuid())
+  tripId         String
+  cityId         String
+  orderIndex     Int
+  arrivalDate    DateTime?
+  departureDate  DateTime?
+  notes          String?
+
+  // PS7: Hotel & transport per stop
+  hotelId           String?
+  transportToNextId String?
+
+  trip           Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  city           City           @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  hotel          Hotel?         @relation(fields: [hotelId], references: [id], onDelete: SetNull)
+  transportToNext Transport?    @relation(fields: [transportToNextId], references: [id], onDelete: SetNull)
+  tripActivities TripActivity[]
+}
+
+model TripActivity {
+  id             String     @id @default(uuid())
+  tripId         String
+  tripStopId     String?
+  activityId     String?
+  customTitle    String?
+  dayNumber      Int        @default(1)
+  scheduledTime  String?    // e.g. "09:30"
+  estimatedCost  Float      @default(0)
+  category       String     @default("Sightseeing")
+  orderIndex     Int        @default(0)
+  notes          String?
+  isCompleted    Boolean    @default(false)
+
+  // PS7: Booking & vendor tracking
+  bookingId      String?
+  vendorId       String?
+  status         String     @default("available") // available, booked, cancelled, rescheduled
+
+  trip           Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  tripStop       TripStop?  @relation(fields: [tripStopId], references: [id], onDelete: SetNull)
+  activity       Activity?  @relation(fields: [activityId], references: [id], onDelete: SetNull)
+}
+
+model Expense {
+  id             String   @id @default(uuid())
+  tripId         String
+  title          String
+  category       String   // Transport, Accommodation, Activities, Meals, Other
+  amount         Float
+  date           DateTime @default(now())
+  notes          String?
+  attachmentUrl  String?
+  attachmentName String?
+
+  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+}
+
+model SavedDestination {
+  id        String   @id @default(uuid())
+  userId    String
+  cityId    String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cityId])
+}
+
+model PackingItem {
+  id        String   @id @default(uuid())
+  tripId    String
+  label     String
+  category  String   @default("General")
+  isPacked  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+}
+
+// ─── PS7: NEW MODELS ─────────────────────────────────────────────────────────
+
+model Hotel {
+  id            String   @id @default(uuid())
+  name          String
+  cityId        String
+  vendorId      String?
+  starRating    Int      @default(3)    // 1–5
+  pricePerNight Float
+  amenities     String[] // ["WiFi", "Pool", "Breakfast", "Spa"]
+  address       String?
+  image         String?
+  description   String?
+  latitude      Float?
+  longitude     Float?
+  isAvailable   Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  city          City      @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  vendor        Vendor?   @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  tripStops     TripStop[]
+  bookings      Booking[] @relation("HotelBookings")
+}
+
+model Transport {
+  id             String   @id @default(uuid())
+  type           String   // flight, bus, train, car_rental
+  operatorName   String
+  vendorId       String?
+  fromCityId     String
+  toCityId       String
+  price          Float
+  departureTime  String   // e.g. "08:30"
+  arrivalTime    String   // e.g. "14:45"
+  durationHours  Float
+  isAvailable    Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  fromCity       City     @relation("TransportFrom", fields: [fromCityId], references: [id], onDelete: Cascade)
+  toCity         City     @relation("TransportTo", fields: [toCityId], references: [id], onDelete: Cascade)
+  vendor         Vendor?  @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  tripStops      TripStop[]
+  bookings       Booking[] @relation("TransportBookings")
+}
+
+model Vendor {
+  id           String    @id @default(uuid())
+  name         String
+  type         String    // hotel, transport, activity, mixed
+  email        String?
+  phone        String?
+  website      String?
+  rating       Float     @default(4.0)
+  isVerified   Boolean   @default(false)
+  logo         String?
+  createdAt    DateTime  @default(now())
+
+  hotels       Hotel[]
+  transports   Transport[]
+  activities   Activity[]
+  bookings     Booking[]
+}
+
+model Booking {
+  id               String        @id @default(uuid())
+  tripId           String
+  userId           String
+  vendorId         String?
+  bookingType      String        // hotel, transport, activity
+  status           BookingStatus @default(PENDING)
+  totalPrice       Float
+  checkIn          DateTime?
+  checkOut         DateTime?
+  guestsCount      Int           @default(1)
+  specialRequests  String?
+  confirmationCode String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  // Separate optional FKs per booking type
+  hotelId          String?
+  transportId      String?
+  activityId       String?
+
+  trip             Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendor           Vendor?       @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  hotel            Hotel?        @relation("HotelBookings", fields: [hotelId], references: [id], onDelete: SetNull)
+  transport        Transport?    @relation("TransportBookings", fields: [transportId], references: [id], onDelete: SetNull)
+  payments         Payment[]
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  bookingId       String
+  amount          Float
+  method          String        @default("card") // card, upi, bank_transfer, cash
+  status          PaymentStatus @default(PENDING)
+  transactionId   String?
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+
+  booking         Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model TourGroup {
+  id             String            @id @default(uuid())
+  name           String
+  tripId         String
+  coordinatorId  String?
+  maxSize        Int               @default(20)
+  status         String            @default("active") // active, completed, cancelled
+  createdAt      DateTime          @default(now())
+
+  trip           Trip              @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  coordinator    User?             @relation("CoordinatorGroups", fields: [coordinatorId], references: [id], onDelete: SetNull)
+  members        TourGroupMember[]
+}
+
+model TourGroupMember {
+  id           String    @id @default(uuid())
+  tourGroupId  String
+  userId       String
+  role         String    @default("member") // member, lead
+  joinedAt     DateTime  @default(now())
+
+  tourGroup    TourGroup @relation(fields: [tourGroupId], references: [id], onDelete: Cascade)
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tourGroupId, userId])
+}
+
+model ItineraryChange {
+  id           String    @id @default(uuid())
+  tripId       String
+  changeType   String    // cancellation, reschedule, substitute, weather, vendor_unavailable
+  description  String
+  oldValue     String?
+  newValue     String?
+  reason       String?
+  impact       String?   // JSON: cascading effects summary
+  status       String    @default("pending") // pending, approved, rejected, auto_applied
+  initiatedBy  String
+  resolvedBy   String?
+  createdAt    DateTime  @default(now())
+  resolvedAt   DateTime?
+
+  trip         Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  initiator    User      @relation("ChangesInitiated", fields: [initiatedBy], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String   // booking, change, weather, payment, system, coordinator
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  actionUrl String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  tripId    String
+  userId    String
+  rating    Int      // 1–5
+  comment   String?
+  photos    String[] // URLs
+  createdAt DateTime @default(now())
+
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, userId])
+}
+
+model TravelerPreference {
+  id                   String   @id @default(uuid())
+  userId               String   @unique
+  travelStyles         String[] // adventure, luxury, budget, cultural, romantic
+  accommodationType    String?  // hotel, hostel, resort, airbnb
+  budgetRange          String?  // budget, mid_range, luxury, ultra_luxury
+  dietaryRequirements  String?
+  mobilityNeeds        String?
+  preferredTransport   String[] // flight, train, bus, car
+  interests            String[] // history, food, nature, nightlife, shopping, art
+  climatePreference    String?  // tropical, temperate, cold, desert
+  updatedAt            DateTime @updatedAt
+
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

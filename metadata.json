@@ -1,0 +1,6 @@
+{
+  "name": "Tripweave",
+  "description": "Premium travel tour booking and exploration landing platform with curated global itineraries and mobile app companion.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
