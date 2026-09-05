@@ -93,8 +93,8 @@ export const AiChatWidget: React.FC<AiChatWidgetProps> = ({ tripId }) => {
               <div>
                 <div className="flex items-center gap-1.5">
                   <h3 className="text-sm font-black text-white">Tripweave Concierge</h3>
-                  <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-violet-900/80 text-violet-200">
-                    Gemini AI
+                  <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-emerald-900/80 text-emerald-200">
+                    OpenAI / GPT
                   </span>
                 </div>
                 <p className="text-[10px] text-gray-400">Adaptive Tour Copilot &bull; Online</p>

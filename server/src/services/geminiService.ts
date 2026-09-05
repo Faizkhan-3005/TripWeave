@@ -27,38 +27,74 @@ interface ImpactAnalysisResult {
 }
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || 'sk-abcdef1234567890abcdef1234567890abcdef12';
 
 /**
- * Helper to call Gemini REST API if key is present
+ * Helper to call OpenAI API or Gemini REST API if keys are present
  */
-async function callGemini(prompt: string, systemInstruction?: string): Promise<string | null> {
-  if (!GEMINI_API_KEY) return null;
-  try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        system_instruction: systemInstruction ? { parts: [{ text: systemInstruction }] } : undefined,
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.4,
-          maxOutputTokens: 1024,
+async function callAiModel(prompt: string, systemInstruction?: string): Promise<string | null> {
+  // 1. Try OpenAI if key is present
+  if (OPENAI_API_KEY) {
+    try {
+      const messages: any[] = [];
+      if (systemInstruction) {
+        messages.push({ role: 'system', content: systemInstruction });
+      }
+      messages.push({ role: 'user', content: prompt });
+
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
         },
-      }),
-    });
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages,
+          temperature: 0.4,
+          max_tokens: 1024,
+        }),
+      });
 
-    if (!response.ok) {
-      console.warn('Gemini API call returned status', response.status);
-      return null;
+      if (res.ok) {
+        const data: any = await res.json();
+        const content = data.choices?.[0]?.message?.content;
+        if (content) return content;
+      } else {
+        console.warn('OpenAI API returned status', res.status);
+      }
+    } catch (err) {
+      console.error('OpenAI call error:', err);
     }
-
-    const data: any = await response.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
-  } catch (err) {
-    console.error('Gemini call error:', err);
-    return null;
   }
+
+  // 2. Try Gemini if configured
+  if (GEMINI_API_KEY) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: systemInstruction ? { parts: [{ text: systemInstruction }] } : undefined,
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.4,
+            maxOutputTokens: 1024,
+          },
+        }),
+      });
+
+      if (response.ok) {
+        const data: any = await response.json();
+        return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+      }
+    } catch (err) {
+      console.error('Gemini call error:', err);
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -100,7 +136,7 @@ Respond with pure JSON in this format:
 }
 `;
 
-  const raw = await callGemini(prompt, 'You are an airline & tour operations logistical calculator.');
+  const raw = await callAiModel(prompt, 'You are an airline & tour operations logistical calculator.');
   if (raw) {
     try {
       const clean = raw.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -248,7 +284,7 @@ Help them with itinerary suggestions, finding local cafes, packing tips, schedul
   const conversation = history.map((m) => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
   const fullPrompt = `${conversation}\nUSER: ${userMessage}\nASSISTANT:`;
 
-  const aiReply = await callGemini(fullPrompt, systemPrompt);
+  const aiReply = await callAiModel(fullPrompt, systemPrompt);
   if (aiReply) return aiReply;
 
   // Conversational fallback
