@@ -98,6 +98,10 @@ export const api = {
       request<{ message: string }>(`/trips/${id}`, {
         method: 'DELETE',
       }),
+    complete: (id: string) =>
+      request<{ message: string; trip: TripModel; summary: any }>(`/trips/${id}/complete`, {
+        method: 'PUT',
+      }),
     exportCsvUrl: (id: string) => {
       const token = localStorage.getItem('tripweave_token');
       return `/api/trips/${id}/export-csv${token ? `?token=${encodeURIComponent(token)}` : ''}`;

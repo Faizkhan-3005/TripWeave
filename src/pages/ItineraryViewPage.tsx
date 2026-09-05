@@ -3,10 +3,12 @@ import { useParams, Link } from 'react-router-dom';
 import {
   Calendar, Clock, MapPin, DollarSign,
   ArrowLeft, ArrowRight, List, LayoutGrid,
-  Tag, CheckCircle2, Compass, ChevronDown, ChevronUp
+  Tag, CheckCircle2, Compass, ChevronDown, ChevronUp,
+  Star, Award, Check, MessageSquare
 } from 'lucide-react';
-import { TripModel, TripActivityModel } from '../types';
+import { TripModel, TripActivityModel, ReviewModel } from '../types';
 import { api } from '../services/api';
+import { TripReviewModal } from '../components/reviews/TripReviewModal';
 import toast from 'react-hot-toast';
 
 type ViewMode = 'list' | 'calendar';
@@ -17,10 +19,40 @@ export const ItineraryViewPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set([1]));
+  const [reviews, setReviews] = useState<ReviewModel[]>([]);
+  const [reviewModalOpen, setReviewModalOpen] = useState<boolean>(false);
+  const [completing, setCompleting] = useState<boolean>(false);
 
   useEffect(() => {
-    if (tripId) loadTrip(tripId);
+    if (tripId) {
+      loadTrip(tripId);
+      loadReviews(tripId);
+    }
   }, [tripId]);
+
+  const loadReviews = async (id: string) => {
+    try {
+      const res = await api.reviews.list({ tripId: id });
+      setReviews(res.reviews || []);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleCompleteTrip = async () => {
+    if (!trip) return;
+    setCompleting(true);
+    try {
+      await api.trips.complete(trip.id);
+      toast.success('🎉 Trip marked as completed! How was your journey?');
+      loadTrip(trip.id);
+      setReviewModalOpen(true);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to complete trip.');
+    } finally {
+      setCompleting(false);
+    }
+  };
 
   const loadTrip = async (id: string) => {
     try {
@@ -94,24 +126,45 @@ export const ItineraryViewPage: React.FC = () => {
           </p>
         </div>
 
-        {/* View Mode Toggle */}
-        <div className="flex gap-1 bg-white p-1 rounded-2xl border border-[#e5e5ea] shadow-xs">
-          <button
-            onClick={() => setViewMode('list')}
-            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              viewMode === 'list' ? 'bg-black text-white shadow-xs' : 'text-gray-600 hover:text-black'
-            }`}
-          >
-            <List className="w-3.5 h-3.5" /> List View
-          </button>
-          <button
-            onClick={() => setViewMode('calendar')}
-            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              viewMode === 'calendar' ? 'bg-black text-white shadow-xs' : 'text-gray-600 hover:text-black'
-            }`}
-          >
-            <LayoutGrid className="w-3.5 h-3.5" /> Calendar View
-          </button>
+        {/* Action Controls & View Mode Toggle */}
+        <div className="flex flex-wrap items-center gap-2">
+          {trip.status !== 'COMPLETED' ? (
+            <button
+              onClick={handleCompleteTrip}
+              disabled={completing}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-2xl text-xs font-black flex items-center gap-1.5 transition-all shadow-sm cursor-pointer disabled:opacity-50"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>{completing ? 'Completing...' : 'Complete Journey'}</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setReviewModalOpen(true)}
+              className="bg-amber-400 hover:bg-amber-500 text-black px-4 py-2 rounded-2xl text-xs font-black flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+            >
+              <Star className="w-3.5 h-3.5 fill-current" />
+              <span>Leave Verified Review</span>
+            </button>
+          )}
+
+          <div className="flex gap-1 bg-white p-1 rounded-2xl border border-[#e5e5ea] shadow-xs">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                viewMode === 'list' ? 'bg-black text-white shadow-xs' : 'text-gray-600 hover:text-black'
+              }`}
+            >
+              <List className="w-3.5 h-3.5" /> List
+            </button>
+            <button
+              onClick={() => setViewMode('calendar')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                viewMode === 'calendar' ? 'bg-black text-white shadow-xs' : 'text-gray-600 hover:text-black'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" /> Calendar
+            </button>
+          </div>
         </div>
       </div>
 
@@ -333,6 +386,86 @@ export const ItineraryViewPage: React.FC = () => {
           <span className="text-2xl font-black text-emerald-400">${totalCost.toLocaleString()}</span>
         </div>
       </div>
+
+      {/* Verified Traveler Reviews & Testimonials Section */}
+      <div className="bg-white rounded-[32px] p-6 sm:p-8 border border-[#e5e5ea] shadow-xs space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
+              <h3 className="text-lg font-black text-black tracking-tight">
+                Verified Explorer Reviews &amp; Testimonials
+              </h3>
+            </div>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Read feedback from travelers who navigated this exact departure route.
+            </p>
+          </div>
+
+          <button
+            onClick={() => setReviewModalOpen(true)}
+            className="px-4 py-2 rounded-xl bg-black text-white hover:bg-neutral-800 text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
+          >
+            <Star className="w-3.5 h-3.5 fill-current text-yellow-300" />
+            <span>Write a Review</span>
+          </button>
+        </div>
+
+        {reviews.length === 0 ? (
+          <div className="py-12 text-center text-gray-400">
+            <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-30 text-gray-400" />
+            <p className="text-xs font-bold text-gray-600">Be the First to Review this Tour</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">
+              Completed this escape? Leave a verified rating and tips for the community!
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {reviews.map((rev) => (
+              <div key={rev.id} className="p-5 rounded-2xl bg-[#fafafa] border border-gray-200/70 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <img
+                      src={rev.user?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'}
+                      alt={rev.user?.name}
+                      className="w-7 h-7 rounded-full object-cover border border-black/10"
+                    />
+                    <div>
+                      <span className="text-xs font-bold text-black block leading-none">{rev.user?.name || 'Verified Traveler'}</span>
+                      <span className="text-[9px] text-gray-400">{new Date(rev.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-0.5">
+                    {[...Array(rev.rating)].map((_, i) => (
+                      <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
+                </div>
+
+                {rev.comment && (
+                  <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {rev.comment}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Review Submission Modal */}
+      {reviewModalOpen && (
+        <TripReviewModal
+          isOpen={reviewModalOpen}
+          onClose={() => setReviewModalOpen(false)}
+          tripId={trip.id}
+          tripTitle={trip.title}
+          onReviewSubmitted={() => {
+            loadReviews(trip.id);
+          }}
+        />
+      )}
 
     </div>
   );

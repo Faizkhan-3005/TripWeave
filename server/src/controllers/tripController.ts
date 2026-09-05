@@ -238,6 +238,62 @@ export const deleteTrip = async (req: AuthRequest, res: Response): Promise<void>
   }
 };
 
+export const completeTrip = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const trip = await prisma.trip.findFirst({
+      where: { id, userId: req.userId },
+      include: {
+        stops: { include: { city: true } },
+        tripActivities: true,
+        expenses: true,
+      },
+    });
+
+    if (!trip) {
+      res.status(404).json({ error: 'Trip not found.' });
+      return;
+    }
+
+    const updated = await prisma.trip.update({
+      where: { id },
+      data: {
+        status: 'COMPLETED',
+      },
+    });
+
+    // Create celebratory notification prompting for review
+    await prisma.notification.create({
+      data: {
+        userId: req.userId!,
+        type: 'system',
+        title: `Journey Complete: ${trip.title}! 🎉`,
+        message: `Congratulations on completing your escape! Share your rating and photos to help fellow travelers.`,
+        actionUrl: `/app/trips/${trip.id}/view`,
+      },
+    });
+
+    const totalSpent = trip.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const completedActivitiesCount = trip.tripActivities.filter((a) => a.isCompleted).length;
+
+    res.json({
+      message: 'Trip marked as completed!',
+      trip: updated,
+      summary: {
+        totalStops: trip.stops.length,
+        totalActivities: trip.tripActivities.length,
+        completedActivities: completedActivitiesCount,
+        totalSpent,
+        savedBudget: Math.max(0, trip.budget - totalSpent),
+      },
+    });
+  } catch (err: any) {
+    console.error('Complete trip error:', err);
+    res.status(500).json({ error: 'Failed to complete trip.' });
+  }
+};
+
 export const exportTripCSV = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;

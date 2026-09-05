@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { listTrips, createTrip, getTripDetails, updateTrip, deleteTrip, exportTripCSV } from '../controllers/tripController.js';
+import { listTrips, createTrip, getTripDetails, updateTrip, deleteTrip, exportTripCSV, completeTrip } from '../controllers/tripController.js';
 import { addStop, reorderStops, removeStop, updateStop } from '../controllers/stopController.js';
 import { addActivity, updateActivity, reorderActivities, removeActivity } from '../controllers/activityController.js';
 import { getTripBudgetStats, addExpense, deleteExpense } from '../controllers/budgetController.js';
@@ -16,6 +16,7 @@ tripRouter.get('/', listTrips);
 tripRouter.post('/', createTrip);
 tripRouter.get('/:id', getTripDetails);
 tripRouter.put('/:id', updateTrip);
+tripRouter.put('/:id/complete', completeTrip);
 tripRouter.delete('/:id', deleteTrip);
 tripRouter.get('/:id/export-csv', exportTripCSV);
 

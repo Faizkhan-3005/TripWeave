@@ -186,9 +186,16 @@ export const MyTripsPage: React.FC = () => {
 
                   {/* Body Info */}
                   <div className="p-6">
-                    <h3 className="text-xl font-black text-black tracking-tight leading-snug group-hover:text-blue-600 transition-colors font-sans">
-                      {trip.title}
-                    </h3>
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-xl font-black text-black tracking-tight leading-snug group-hover:text-blue-600 transition-colors font-sans">
+                        {trip.title}
+                      </h3>
+                      {trip.status === 'COMPLETED' && (
+                        <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 shrink-0 border border-emerald-200">
+                          Completed
+                        </span>
+                      )}
+                    </div>
 
                     {/* Cities Route */}
                     <div className="mt-2.5 flex flex-wrap gap-1.5">
