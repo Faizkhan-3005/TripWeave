@@ -10,6 +10,7 @@ import { useAuth } from '../../context/AuthContext';
 import { SpotlightSearchModal } from '../common/SpotlightSearchModal';
 import { NotificationBell } from '../common/NotificationBell';
 import { AiChatWidget } from '../ai/AiChatWidget';
+import { DemoSwitcherBar } from '../common/DemoSwitcherBar';
 
 export const AppLayout: React.FC = () => {
   const { user, logout, updateUser } = useAuth();
@@ -398,6 +399,9 @@ export const AppLayout: React.FC = () => {
 
       {/* Global Floating Gemini AI Travel Concierge */}
       <AiChatWidget />
+
+      {/* Global Pitch Demo Persona Quick Switcher */}
+      <DemoSwitcherBar />
 
     </div>
   );

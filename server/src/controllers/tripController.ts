@@ -45,6 +45,7 @@ export const listTrips = async (req: AuthRequest, res: Response): Promise<void> 
         currency: t.currency,
         shareSlug: t.shareSlug,
         isPublic: t.isPublic,
+        status: t.status,
         stopsCount: t.stops.length,
         activitiesCount: t._count.tripActivities,
         totalSpent,
