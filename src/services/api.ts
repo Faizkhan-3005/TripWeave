@@ -142,6 +142,11 @@ export const api = {
       request<{ message: string }>(`/trips/${tripId}/stops/${stopId}`, {
         method: 'DELETE',
       }),
+    update: (tripId: string, stopId: string, data: { hotelId?: string | null; transportToNextId?: string | null; arrivalDate?: string; departureDate?: string; notes?: string }) =>
+      request<{ message: string; stop: any }>(`/trips/${tripId}/stops/${stopId}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
   },
 
   // Activities & Itinerary

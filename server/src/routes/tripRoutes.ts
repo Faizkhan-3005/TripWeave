@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { listTrips, createTrip, getTripDetails, updateTrip, deleteTrip, exportTripCSV } from '../controllers/tripController.js';
-import { addStop, reorderStops, removeStop } from '../controllers/stopController.js';
+import { addStop, reorderStops, removeStop, updateStop } from '../controllers/stopController.js';
 import { addActivity, updateActivity, reorderActivities, removeActivity } from '../controllers/activityController.js';
 import { getTripBudgetStats, addExpense, deleteExpense } from '../controllers/budgetController.js';
 import { listPackingItems, createPackingItem, updatePackingItem, deletePackingItem, applyPackingTemplate } from '../controllers/packingController.js';
@@ -26,6 +26,7 @@ tripRouter.post('/:id/ai-apply', applyAiSuggestions);
 // Trip Stops
 tripRouter.post('/:id/stops', addStop);
 tripRouter.put('/:id/stops/reorder', reorderStops);
+tripRouter.put('/:id/stops/:stopId', updateStop);
 tripRouter.delete('/:id/stops/:stopId', removeStop);
 
 // Trip Activities & Itinerary

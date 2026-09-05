@@ -35,6 +35,7 @@ export const AppLayout: React.FC = () => {
   const travelerNavItems = [
     { to: '/app', label: 'Dashboard', icon: LayoutDashboard, exact: true },
     { to: '/app/trips', label: 'My Trips', icon: MapPin },
+    { to: '/app/bookings', label: 'My Bookings', icon: Ticket },
     { to: '/app/search', label: 'Explore Cities', icon: Compass },
     { to: '/app/activities', label: 'Activity Catalog', icon: Sparkles },
     { to: '/app/calendar', label: 'Master Schedule', icon: Calendar },

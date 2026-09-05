@@ -115,6 +115,10 @@ export interface TripStopModel {
   departureDate?: string | null;
   notes?: string | null;
   city: CityModel;
+  hotelId?: string | null;
+  transportToNextId?: string | null;
+  hotel?: HotelModel | null;
+  transportToNext?: TransportModel | null;
 }
 
 export interface TripActivityModel {

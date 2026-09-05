@@ -135,6 +135,12 @@ export const getTripDetails = async (req: AuthRequest, res: Response): Promise<v
             city: {
               include: { activities: true },
             },
+            hotel: {
+              include: { vendor: true },
+            },
+            transportToNext: {
+              include: { fromCity: true, toCity: true, vendor: true },
+            },
           },
         },
         tripActivities: {

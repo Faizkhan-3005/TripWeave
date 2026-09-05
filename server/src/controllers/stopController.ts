@@ -121,3 +121,41 @@ export const removeStop = async (req: AuthRequest, res: Response): Promise<void>
     res.status(500).json({ error: 'Failed to remove stop.' });
   }
 };
+
+export const updateStop = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id: tripId, stopId } = req.params;
+    const { hotelId, transportToNextId, arrivalDate, departureDate, notes } = req.body;
+
+    const trip = await prisma.trip.findFirst({
+      where: { id: tripId, userId: req.userId },
+    });
+
+    if (!trip) {
+      res.status(404).json({ error: 'Trip not found.' });
+      return;
+    }
+
+    const data: any = {};
+    if (hotelId !== undefined) data.hotelId = hotelId;
+    if (transportToNextId !== undefined) data.transportToNextId = transportToNextId;
+    if (arrivalDate !== undefined) data.arrivalDate = arrivalDate ? new Date(arrivalDate) : null;
+    if (departureDate !== undefined) data.departureDate = departureDate ? new Date(departureDate) : null;
+    if (notes !== undefined) data.notes = notes;
+
+    const updated = await prisma.tripStop.update({
+      where: { id: stopId },
+      data,
+      include: {
+        city: true,
+        hotel: { include: { vendor: true } },
+        transportToNext: { include: { fromCity: true, toCity: true, vendor: true } },
+      },
+    });
+
+    res.json({ message: 'Stop updated successfully.', stop: updated });
+  } catch (err: any) {
+    console.error('Update stop error:', err);
+    res.status(500).json({ error: 'Failed to update stop.' });
+  }
+};

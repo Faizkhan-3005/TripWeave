@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Check, ArrowRight, ArrowLeft, Compass, Sparkles, MapPin, Tag, Heart, Shield } from 'lucide-react';
 import { OnboardingPreferences, Tour } from '../types';
 import { TOURS_DATA } from '../data/toursData';
+import { api } from '../services/api';
 
 interface OnboardingModalProps {
   isOpen: boolean;
@@ -61,7 +62,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
     }, 900);
   };
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     const preferences: OnboardingPreferences = {
       travelStyle: selectedStyles,
       climateVibe: selectedVibes,
@@ -69,6 +70,19 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
       budget,
       groupType
     };
+
+    // Persist to backend database for logged-in user if available
+    try {
+      await api.preferences.save({
+        travelStyles: selectedStyles,
+        budgetRange: budget,
+        climatePreference: selectedVibes.join(', '),
+        interests: selectedStyles,
+      });
+    } catch {
+      // Graceful fallback if user is guest or token is expired
+    }
+
     if (matchedTour) {
       onCompleteOnboarding(preferences, matchedTour.id);
     }

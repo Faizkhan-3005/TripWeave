@@ -14,6 +14,9 @@ import { TripRouteMap } from '../components/common/TripRouteMap';
 import { WeatherWidget } from '../components/common/WeatherWidget';
 import { PackingListTab } from '../components/common/PackingListTab';
 import { exportTripPdf } from '../services/pdfGenerator';
+import { HotelTransportSelectorModal } from '../components/itinerary/HotelTransportSelectorModal';
+import { BookingWizardModal } from '../components/booking/BookingWizardModal';
+import { Building2, Plane, Ticket, CreditCard, ShieldCheck } from 'lucide-react';
 
 
 export const ItineraryBuilderPage: React.FC = () => {
@@ -54,6 +57,11 @@ export const ItineraryBuilderPage: React.FC = () => {
   const [stopModalOpen, setStopModalOpen] = useState<boolean>(false);
   const [allCities, setAllCities] = useState<CityModel[]>([]);
   const [selectedNewCityId, setSelectedNewCityId] = useState<string>('');
+
+  // PS7: Logistics Selector & Booking Wizard State
+  const [logisticsModalOpen, setLogisticsModalOpen] = useState<boolean>(false);
+  const [activeStopForLogistics, setActiveStopForLogistics] = useState<any>(null);
+  const [bookingWizardOpen, setBookingWizardOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (tripId) {
@@ -318,14 +326,40 @@ export const ItineraryBuilderPage: React.FC = () => {
 
           {/* City Stops Pills with Weather */}
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-bold text-gray-400">Route:</span>
+            <span className="text-[11px] font-bold text-gray-400">Route &amp; Logistics:</span>
             {trip.stops.map((stop, idx) => (
               <div
                 key={stop.id}
-                className="bg-[#e3e2f7] text-black text-xs font-extrabold px-3 py-1 rounded-xl flex items-center gap-1.5 shadow-2xs"
+                className="bg-[#e3e2f7] text-black text-xs font-extrabold px-3 py-1.5 rounded-xl flex items-center gap-2 shadow-2xs group"
               >
                 <span>{idx + 1}. {stop.city.name}</span>
                 <WeatherWidget cityName={stop.city.name} country={stop.city.country} />
+                
+                {/* Hotel & Transport Status Badges with Quick Configure */}
+                <button
+                  onClick={() => {
+                    setActiveStopForLogistics(stop);
+                    setLogisticsModalOpen(true);
+                  }}
+                  title="Configure hotel and departure transport for this stop"
+                  className="px-2 py-0.5 rounded-lg bg-white/80 hover:bg-white text-[10px] font-extrabold flex items-center gap-1 border border-black/10 cursor-pointer transition-colors shadow-2xs"
+                >
+                  {stop.hotel ? (
+                    <span className="text-amber-700 flex items-center gap-0.5">
+                      <Building2 className="w-2.5 h-2.5" /> {stop.hotel.name.slice(0, 12)}..
+                    </span>
+                  ) : (
+                    <span className="text-gray-500 flex items-center gap-0.5">
+                      <Building2 className="w-2.5 h-2.5" /> + Hotel
+                    </span>
+                  )}
+                  {stop.transportToNext && (
+                    <span className="text-blue-700 flex items-center gap-0.5 ml-1 border-l border-gray-300 pl-1">
+                      <Plane className="w-2.5 h-2.5" /> {stop.transportToNext.type}
+                    </span>
+                  )}
+                </button>
+
                 {trip.stops.length > 1 && (
                   <button
                     onClick={() => handleRemoveStop(stop.id)}
@@ -338,7 +372,7 @@ export const ItineraryBuilderPage: React.FC = () => {
             ))}
             <button
               onClick={handleOpenAddStopModal}
-              className="border border-dashed border-gray-400 hover:border-black text-gray-600 hover:text-black text-xs font-bold px-3 py-1 rounded-xl flex items-center gap-1 transition-colors cursor-pointer"
+              className="border border-dashed border-gray-400 hover:border-black text-gray-600 hover:text-black text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1 transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add City</span>
@@ -349,6 +383,14 @@ export const ItineraryBuilderPage: React.FC = () => {
 
         {/* Action Shortcuts */}
         <div className="flex flex-wrap items-center gap-2.5">
+          {/* PS7: Multi-Step Booking Wizard Primary CTA */}
+          <button
+            onClick={() => setBookingWizardOpen(true)}
+            className="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md hover:shadow-lg cursor-pointer"
+          >
+            <Ticket className="w-4 h-4 text-emerald-200" />
+            <span>Book Tour Package</span>
+          </button>
           <Link
             to={`/app/trips/${trip.id}/view`}
             className="bg-[#e3e2f7] hover:bg-[#d5d4f0] text-black px-3.5 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-colors shadow-xs"
@@ -1042,6 +1084,34 @@ export const ItineraryBuilderPage: React.FC = () => {
 
           </div>
         </div>
+      )}
+
+      {/* PS7: Accommodation & Transit Comparison Modal */}
+      {logisticsModalOpen && activeStopForLogistics && trip && (
+        <HotelTransportSelectorModal
+          isOpen={logisticsModalOpen}
+          onClose={() => {
+            setLogisticsModalOpen(false);
+            setActiveStopForLogistics(null);
+          }}
+          stop={activeStopForLogistics}
+          tripId={trip.id}
+          onUpdated={() => {
+            loadTripData(trip.id);
+          }}
+        />
+      )}
+
+      {/* PS7: Multi-Step Booking Wizard Modal */}
+      {bookingWizardOpen && trip && (
+        <BookingWizardModal
+          isOpen={bookingWizardOpen}
+          onClose={() => setBookingWizardOpen(false)}
+          trip={trip}
+          onBookingSuccess={() => {
+            loadTripData(trip.id);
+          }}
+        />
       )}
 
     </div>

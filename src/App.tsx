@@ -28,6 +28,7 @@ import { AnalyticsPage } from './pages/AnalyticsPage';
 import { ItineraryViewPage } from './pages/ItineraryViewPage';
 import { ActivitySearchPage } from './pages/ActivitySearchPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
+import { TravelerBookingsPage } from './pages/TravelerBookingsPage';
 
 // PS7: Operator Portal Pages
 import { OperatorDashboardPage } from './pages/OperatorDashboardPage';
@@ -80,6 +81,7 @@ export default function App() {
             >
               <Route index element={<DashboardPage />} />
               <Route path="trips" element={<MyTripsPage />} />
+              <Route path="bookings" element={<TravelerBookingsPage />} />
               <Route path="trips/new" element={<CreateTripPage />} />
               <Route path="trips/:tripId" element={<Navigate to="builder" replace />} />
               <Route path="trips/:tripId/builder" element={<ItineraryBuilderPage />} />
