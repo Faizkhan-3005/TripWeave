@@ -94,10 +94,10 @@ export const AiChatWidget: React.FC<AiChatWidgetProps> = ({ tripId }) => {
                 <div className="flex items-center gap-1.5">
                   <h3 className="text-sm font-black text-white">Tripweave Concierge</h3>
                   <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-emerald-900/80 text-emerald-200">
-                    OpenAI / GPT
+                    Concierge Engine
                   </span>
                 </div>
-                <p className="text-[10px] text-gray-400">Adaptive Tour Copilot &bull; Online</p>
+                <p className="text-[10px] text-gray-400">Adaptive Tour Copilot &bull; Instant Q&amp;A</p>
               </div>
             </div>
 
@@ -112,14 +112,17 @@ export const AiChatWidget: React.FC<AiChatWidgetProps> = ({ tripId }) => {
           {/* Quick Prompts Carousel */}
           <div className="bg-[#fafafa] border-b border-gray-100 p-2.5 px-3 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
             {[
-              { label: '🍷 Best Dinner Spots', query: 'What are the top-rated local dining spots for this trip?' },
-              { label: '💰 Budget Trajectory', query: 'Analyze my trip budget and daily allowance.' },
+              { label: '🍷 Best Dining', query: 'What are the top-rated local dining spots and hidden gems for this tour?' },
+              { label: '💰 Budget Breakdown', query: 'Analyze my trip budget, projected daily spending, and cost variance.' },
               { label: '🌦️ Weather Advisory', query: 'How does the weather forecast look and what should I pack?' },
+              { label: '⚡ Delayed Flight Protocol', query: 'What happens if my connecting flight or train gets delayed?' },
+              { label: '🏛️ Local Etiquette', query: 'What local etiquette, tipping customs, or customs should I know?' },
+              { label: '⏱️ Optimize Pace', query: 'Can you optimize my daily schedule to reduce walking distance and fatigue?' },
             ].map((p, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSend(p.query)}
-                className="whitespace-nowrap px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-[10px] font-bold text-gray-600 hover:text-black hover:border-black transition-colors cursor-pointer"
+                className="whitespace-nowrap px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-[10px] font-bold text-gray-600 hover:text-black hover:border-black transition-colors cursor-pointer shrink-0"
               >
                 {p.label}
               </button>

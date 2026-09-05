@@ -182,34 +182,24 @@ export const applyAiSuggestions = async (req: AuthRequest, res: Response): Promi
   }
 };
 
-// ── CONVERSATIONAL GEMINI AI CHAT ────────────────────────────────────────────
+// ── CONVERSATIONAL TRAVEL CONCIERGE (PREBUILT CURATED ENGINE) ────────────────
 export const chatWithAi = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { tripId, messages, userMessage } = req.body;
-    let tripContext = { title: 'Custom Journey', stops: [] as string[], duration: 5, budget: 2000 };
+    const { tripId, userMessage } = req.body;
+    let tripTitle = 'Your Tour Itinerary';
 
     if (tripId) {
-      const trip = await prisma.trip.findUnique({
-        where: { id: tripId },
-        include: { stops: { include: { city: true } } },
-      });
-      if (trip) {
-        tripContext = {
-          title: trip.title,
-          stops: trip.stops.map((s) => s.city.name),
-          duration: Math.max(1, Math.ceil((new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 3600 * 24))),
-          budget: trip.budget,
-        };
-      }
+      const trip = await prisma.trip.findUnique({ where: { id: tripId }, select: { title: true } });
+      if (trip?.title) tripTitle = trip.title;
     }
 
-    const { chatWithAssistant } = await import('../services/geminiService.js');
-    const reply = await chatWithAssistant(tripContext, messages || [], userMessage || 'Hello');
+    const { getCuratedAnswer } = await import('../services/curatedTravelEngine.js');
+    const reply = getCuratedAnswer(userMessage || 'Hello', tripTitle);
 
     res.json({ reply });
   } catch (err: any) {
     console.error('AI chat error:', err);
-    res.status(500).json({ error: 'Failed to generate AI response.' });
+    res.status(500).json({ error: 'Failed to generate response.' });
   }
 };
 
