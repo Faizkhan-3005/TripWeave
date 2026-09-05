@@ -16,6 +16,7 @@ import { PackingListTab } from '../components/common/PackingListTab';
 import { exportTripPdf } from '../services/pdfGenerator';
 import { HotelTransportSelectorModal } from '../components/itinerary/HotelTransportSelectorModal';
 import { BookingWizardModal } from '../components/booking/BookingWizardModal';
+import { WeatherDisruptionAlert } from '../components/common/WeatherDisruptionAlert';
 import { Building2, Plane, Ticket, CreditCard, ShieldCheck } from 'lucide-react';
 
 
@@ -553,6 +554,26 @@ export const ItineraryBuilderPage: React.FC = () => {
         {/* Right Column: Active Day Activities Timeline */}
         <div className="lg:col-span-8 space-y-4">
           
+          {/* PS7: Weather Disruption Alert */}
+          {trip.stops[0]?.city && (
+            <WeatherDisruptionAlert
+              cityName={trip.stops[0].city.name}
+              activities={activitiesForActiveDay}
+              onSwapActivity={async (activityId, title, cat, cost) => {
+                try {
+                  await api.activities.updateInTrip(trip.id, activityId, {
+                    customTitle: title,
+                    category: cat,
+                    estimatedCost: cost,
+                  });
+                  loadTripData(trip.id);
+                } catch {
+                  // error handled in alert
+                }
+              }}
+            />
+          )}
+
           {/* Active Day Header Bar */}
           <div className="bg-white rounded-3xl p-5 border border-[#e5e5ea] shadow-xs flex items-center justify-between">
             <div>

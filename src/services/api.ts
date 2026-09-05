@@ -233,6 +233,11 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ suggestions }),
       }),
+    chat: (data: { tripId?: string; messages: { role: 'user' | 'assistant'; content: string }[]; userMessage: string }) =>
+      request<{ reply: string }>('/ai/chat', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
   },
 
   // Cities

@@ -181,3 +181,35 @@ export const applyAiSuggestions = async (req: AuthRequest, res: Response): Promi
     res.status(500).json({ error: 'Failed to apply AI suggestions.' });
   }
 };
+
+// ── CONVERSATIONAL GEMINI AI CHAT ────────────────────────────────────────────
+export const chatWithAi = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { tripId, messages, userMessage } = req.body;
+    let tripContext = { title: 'Custom Journey', stops: [] as string[], duration: 5, budget: 2000 };
+
+    if (tripId) {
+      const trip = await prisma.trip.findUnique({
+        where: { id: tripId },
+        include: { stops: { include: { city: true } } },
+      });
+      if (trip) {
+        tripContext = {
+          title: trip.title,
+          stops: trip.stops.map((s) => s.city.name),
+          duration: Math.max(1, Math.ceil((new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 3600 * 24))),
+          budget: trip.budget,
+        };
+      }
+    }
+
+    const { chatWithAssistant } = await import('../services/geminiService.js');
+    const reply = await chatWithAssistant(tripContext, messages || [], userMessage || 'Hello');
+
+    res.json({ reply });
+  } catch (err: any) {
+    console.error('AI chat error:', err);
+    res.status(500).json({ error: 'Failed to generate AI response.' });
+  }
+};
+

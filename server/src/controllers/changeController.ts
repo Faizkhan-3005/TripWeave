@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.js';
 import { prisma } from '../prisma.js';
+import { analyzeChangeImpact } from '../services/geminiService.js';
 
 // ── LIST CHANGES ─────────────────────────────────────────────────────────────
 export const listChanges = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -35,27 +36,12 @@ export const createChange = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    // Compute impact (simplified — Phase 4 will add real Gemini-powered impact analysis)
-    let impact = '{}';
-    if (changeType === 'cancellation') {
-      impact = JSON.stringify({
-        affectedItems: 'Subsequent activities may need rescheduling',
-        costImpact: 'Potential refund required',
-        severity: 'medium',
-      });
-    } else if (changeType === 'reschedule') {
-      impact = JSON.stringify({
-        affectedItems: 'Transport connections and hotel dates may shift',
-        costImpact: 'Possible price difference',
-        severity: 'low',
-      });
-    } else if (changeType === 'weather') {
-      impact = JSON.stringify({
-        affectedItems: 'Outdoor activities on affected dates',
-        costImpact: 'Alternative indoor activities may differ in cost',
-        severity: 'low',
-      });
-    }
+    const trip = await prisma.trip.findUnique({ where: { id: tripId } });
+    const tripTitle = trip?.title || 'Tour Itinerary';
+
+    // Compute AI impact analysis with cascading notes and ranked alternatives
+    const impactResult = await analyzeChangeImpact(tripTitle, changeType, description, oldValue, newValue);
+    const impact = JSON.stringify(impactResult);
 
     const change = await prisma.itineraryChange.create({
       data: {
@@ -73,7 +59,6 @@ export const createChange = async (req: AuthRequest, res: Response): Promise<voi
     });
 
     // Notify trip owner if change was initiated by someone else
-    const trip = await prisma.trip.findUnique({ where: { id: tripId } });
     if (trip && trip.userId !== req.userId) {
       await prisma.notification.create({
         data: {

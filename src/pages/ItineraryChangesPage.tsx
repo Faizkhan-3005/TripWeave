@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { 
   AlertTriangle, CheckCircle2, XCircle, Clock, RefreshCw, 
-  CloudRain, Calendar, ArrowRight, ShieldAlert, Check, X, FileText
+  CloudRain, Calendar, ArrowRight, ShieldAlert, Check, X, FileText,
+  Sparkles, Layers, DollarSign
 } from 'lucide-react';
 import { api } from '../services/api';
 import { ItineraryChangeModel } from '../types';
+import { ChangeSimulationModal } from '../components/itinerary/ChangeSimulationModal';
 import toast from 'react-hot-toast';
 
 export const ItineraryChangesPage: React.FC = () => {
@@ -12,6 +14,7 @@ export const ItineraryChangesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [simulationModalOpen, setSimulationModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     loadChanges();
@@ -60,13 +63,24 @@ export const ItineraryChangesPage: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={loadChanges}
-          className="flex items-center gap-2 text-xs font-bold bg-[#f3f3f6] hover:bg-gray-200 text-black px-4 py-2.5 rounded-xl transition-colors cursor-pointer shrink-0"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>Reload Ledger</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setSimulationModalOpen(true)}
+            className="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-2xl text-xs font-black flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
+            <span>Simulate Disruption</span>
+          </button>
+
+          <button
+            onClick={loadChanges}
+            disabled={loading}
+            className="p-2.5 bg-gray-100 hover:bg-gray-200 text-black rounded-2xl transition-colors cursor-pointer disabled:opacity-50"
+            title="Refresh"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
       </div>
 
       {/* Filter Tabs */}
@@ -149,16 +163,67 @@ export const ItineraryChangesPage: React.FC = () => {
                     )}
 
                     {impactData && (
-                      <div className="flex flex-wrap gap-3 text-[10px] font-semibold text-gray-600 pt-1">
-                        {impactData.costDifference !== undefined && (
-                          <span className="bg-white px-2 py-0.5 rounded border border-gray-200">
-                            Budget Impact: ${impactData.costDifference}
-                          </span>
+                      <div className="space-y-2 pt-2">
+                        {/* Summary & Tags */}
+                        <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold">
+                          {impactData.severity && (
+                            <span className={`px-2 py-0.5 rounded uppercase ${
+                              impactData.severity === 'high' || impactData.severity === 'critical'
+                                ? 'bg-red-100 text-red-800 border border-red-200'
+                                : 'bg-amber-100 text-amber-800 border border-amber-200'
+                            }`}>
+                              Risk: {impactData.severity}
+                            </span>
+                          )}
+                          {impactData.budgetVariance !== undefined && (
+                            <span className="bg-white px-2 py-0.5 rounded border border-gray-200 text-gray-700">
+                              Variance: ${impactData.budgetVariance}
+                            </span>
+                          )}
+                          {impactData.scheduleShiftHours !== undefined && (
+                            <span className="bg-white px-2 py-0.5 rounded border border-gray-200 text-gray-700">
+                              Schedule Shift: {impactData.scheduleShiftHours} hrs
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Cascading Notes */}
+                        {impactData.cascadingNotes && impactData.cascadingNotes.length > 0 && (
+                          <div className="bg-white/80 p-2.5 rounded-xl border border-gray-200/80 text-[11px] text-gray-600 space-y-1">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-400 block">
+                              Cascade Log
+                            </span>
+                            {impactData.cascadingNotes.map((note: string, nIdx: number) => (
+                              <p key={nIdx} className="flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                                <span>{note}</span>
+                              </p>
+                            ))}
+                          </div>
                         )}
-                        {impactData.scheduleShiftHours !== undefined && (
-                          <span className="bg-white px-2 py-0.5 rounded border border-gray-200">
-                            Time Shift: {impactData.scheduleShiftHours} hrs
-                          </span>
+
+                        {/* Ranked Alternatives */}
+                        {impactData.rankedAlternatives && impactData.rankedAlternatives.length > 0 && (
+                          <div className="pt-1">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-700 block mb-1 flex items-center gap-1">
+                              <Sparkles className="w-3 h-3" /> Ranked AI Alternatives &amp; Mitigations
+                            </span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {impactData.rankedAlternatives.slice(0, 2).map((alt: any, aIdx: number) => (
+                                <div key={aIdx} className="bg-white p-2.5 rounded-xl border border-purple-100 shadow-2xs">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs font-bold text-black">{alt.title}</span>
+                                    <span className="text-[10px] font-black text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded">
+                                      {alt.matchScore}% Match
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-gray-500 mt-0.5 leading-relaxed">
+                                    {alt.reason}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         )}
                       </div>
                     )}
@@ -196,6 +261,17 @@ export const ItineraryChangesPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Disruption Simulation Modal */}
+      {simulationModalOpen && (
+        <ChangeSimulationModal
+          isOpen={simulationModalOpen}
+          onClose={() => setSimulationModalOpen(false)}
+          tripId={changes[0]?.tripId || 'demo-trip-id'}
+          tripTitle={changes[0]?.trip?.title || 'Tour Itinerary'}
+          onSubmitted={() => loadChanges()}
+        />
+      )}
     </div>
   );
 };

@@ -22,6 +22,7 @@ import { notificationRouter } from './routes/notificationRoutes.js';
 import { reviewRouter } from './routes/reviewRoutes.js';
 import { operatorRouter } from './routes/operatorRoutes.js';
 import { preferenceRouter } from './routes/preferenceRoutes.js';
+import { aiRouter } from './routes/aiRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 dotenv.config();
@@ -68,6 +69,7 @@ app.use('/api/notifications', notificationRouter);
 app.use('/api/reviews', reviewRouter);
 app.use('/api/operator', operatorRouter);
 app.use('/api/preferences', preferenceRouter);
+app.use('/api/ai', aiRouter);
 
 // Global Error Handler
 app.use(errorHandler);

@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { SpotlightSearchModal } from '../common/SpotlightSearchModal';
+import { NotificationBell } from '../common/NotificationBell';
+import { AiChatWidget } from '../ai/AiChatWidget';
 
 export const AppLayout: React.FC = () => {
   const { user, logout, updateUser } = useAuth();
@@ -274,6 +276,9 @@ export const AppLayout: React.FC = () => {
               <ArrowUpRight className="w-3.5 h-3.5" />
             </Link>
 
+            {/* Notification Activity Bell */}
+            <NotificationBell />
+
             <Link
               to="/app/trips/new"
               className="sm:hidden bg-black text-white p-2 rounded-xl text-xs font-bold flex items-center justify-center"
@@ -386,10 +391,13 @@ export const AppLayout: React.FC = () => {
       </div>
 
       {/* Global MacBook-Style Spotlight Universal Command Palette */}
-      <SpotlightSearchModal
-        isOpen={spotlightOpen}
-        onClose={() => setSpotlightOpen(false)}
+      <SpotlightSearchModal 
+        isOpen={spotlightOpen} 
+        onClose={() => setSpotlightOpen(false)} 
       />
+
+      {/* Global Floating Gemini AI Travel Concierge */}
+      <AiChatWidget />
 
     </div>
   );
