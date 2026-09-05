@@ -9,27 +9,39 @@ Tripweave is an enterprise-grade full-stack **PERN** web application (PostgreSQL
 
 ## 🚀 Key Innovations & Capabilities
 
-### 1. 🎛️ Dual-Sided Role Architecture
-- **Traveler Portal**: Self-service multi-city trip creation, interactive day-by-day itinerary sequencing, real-time spending analytics, packing checklists, and document downloads.
-- **Tour Operator Command Hub**: Live booking approvals, room inventory tracking, cohort coordination, dispatch workloads, and real-time disruption mitigation.
-- **Instant Role-Switching**: Easily toggle between `Traveler` and `Operator` modes with role-based JWT authentication and protected views.
+## 🚀 Comprehensive Architecture & Capabilities (Phases 1–6)
 
-### 2. 🗺️ Multi-City Itinerary Builder & Live Maps
-- **Interactive Leaflet Route Maps**: Auto-geocoding, numbered destination pins, and connecting route polylines.
-- **Hour-by-Hour Scheduling**: Dynamic time slots, categories, and live budget updates.
-- **Weather-Aware Forecasts**: Real-time 5-day Open-Meteo forecasts per destination stop.
+### 1. 🎛️ Dual-Sided Role & Operations Architecture (Phases 1 & 2)
+- **4 Role Hierarchies**: `TRAVELER`, `OPERATOR`, `COORDINATOR`, and `ADMIN` with granular JWT claims and route guards.
+- **Tour Operator Command Hub (`/app/operator`)**:
+  - Live KPI metric cards (Active departures, occupancy rates, pending bookings, revenue settled).
+  - Booking & Inventory Management (`/app/operator/bookings`) with 1-click confirmation or cancellation.
+  - Supplier & Vendor directory (`/app/operator/vendors`) for hotel chains, airlines, rail lines, and local guides.
+  - Tour Cohorts & Groups (`/app/operator/tour-groups`) tracking capacities and participant manifests.
+  - Field Coordinator Roster (`/app/operator/coordinators`) for dispatching ground guides.
+  - Stripe Financial Ledger (`/app/operator/payments`) auditing payment transactions and refunds.
 
-### 3. 🛡️ Dynamic Tour Disruption & Audit Trail
-- **Live Disruption Management**: Log weather reroutes (e.g. Seine flooding alerts, rain re-sequencing) and supplier schedule changes.
-- **Audit & Impact Analysis**: Track schedule shift history, vendor reallocations, and coordinator dispatch logs.
+### 2. 🧳 Traveler Enhancements & Booking Flow (Phase 3)
+- **Onboarding Preference Engine**: Syncs traveler styles, dietary requirements, and mobility needs to database profiles.
+- **Stop Logistics Comparison Drawer (`HotelTransportSelectorModal.tsx`)**: Side-by-side accommodation and transit selection with live pricing.
+- **Multi-Step Booking Checkout Wizard (`BookingWizardModal.tsx`)**: 4-step flow covering package review, guest details, Stripe payment simulation, and digital voucher pass issuance.
+- **Traveler Bookings Hub (`/app/bookings`)**: Centralized dashboard for tickets, QR confirmation codes, check-in timelines, and self-service cancellations.
 
-### 4. 📊 Financial Analytics & Export Deliverables
-- **Live Budget Tracking**: Donut charts, category expense splits, and budget threshold alerts powered by Recharts.
-- **Automated CSV Tour Manifest**: 1-click spreadsheet export formatted with vendor breakdowns, costs, and timeline details.
-- **Tripweave PDF Expedition Guide**: Client-side generated multi-page A4 travel guides featuring trip summaries, daily schedules, vouchers, and emergency contacts.
+### 3. ⚡ Dynamic Disruption Engine & AI Concierge (Phase 4)
+- **Dynamic Cascading Impact Engine**: Server-side calculation of schedule shifts, budget variance, and ranked alternatives when transit slips or weather strikes.
+- **Weather-Aware Rerouting (`WeatherDisruptionAlert.tsx`)**: Automated rain detection with 1-click indoor activity auto-substitution.
+- **Real-Time Notification System**: Notification bell in topbar with unread count and direct actionable deep links.
+- **Curated Travel Concierge (`curatedTravelEngine.ts` + `AiChatWidget.tsx`)**: 100% reliable, zero-latency travel Q&A engine with 1-click prompt pills for dining, budget trajectory, weather advisories, delayed transit protocols, and local customs.
+- **Disruption Scenario Simulator (`ChangeSimulationModal.tsx`)**: Interactive audit view displaying severity levels, cascade impacts, and alternative substitutions.
 
-### 5. ⚡ Universal Spotlight Search (`Cmd + K` / `Ctrl + K`)
-- Instant keyboard navigation across all tours, cities, activities, and operational tools.
+### 4. 🌟 Trip Review & Completion Lifecycle (Phase 5)
+- **Trip Completion Workflow**: Mark journeys as complete (`PUT /api/trips/:id/complete`) with congratulatory notification triggers and summary memory stats.
+- **Verified Review Modal (`TripReviewModal.tsx`)**: 1–5 star ratings, compliment highlight tags, photo attachments, and traveler testimonials.
+- **Community Review Showcase**: Displays verified traveler ratings directly on itinerary pages.
+
+### 5. 🎭 Presentation & Pitch Demo Flow (Phase 6)
+- **Interactive Demo Quick-Switch Bar (`DemoSwitcherBar.tsx`)**: Floating presenter toolbar enabling 1-click switching between **Traveler Hub**, **Vouchers Hub**, **Weather & AI Disruption**, and **Operator Command Center**.
+- **Pre-Seeded Showcase Scenario**: Complete multi-city European tour with pre-attached luxury hotels, high-speed rail, Stripe bookings, tour group coordinators, and review testimonials.
 
 ---
 
