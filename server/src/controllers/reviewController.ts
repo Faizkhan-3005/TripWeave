@@ -38,8 +38,19 @@ export const createReview = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    const review = await prisma.review.create({
-      data: {
+    const review = await prisma.review.upsert({
+      where: {
+        tripId_userId: {
+          tripId,
+          userId: req.userId!,
+        },
+      },
+      update: {
+        rating: Number(rating),
+        comment: comment || null,
+        photos: photos || [],
+      },
+      create: {
         tripId,
         userId: req.userId!,
         rating: Number(rating),

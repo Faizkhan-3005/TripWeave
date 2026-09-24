@@ -167,6 +167,24 @@ export const ProfilePage: React.FC = () => {
             </div>
 
             <div>
+              <label className="block text-xs font-bold text-black mb-1.5">Account Role / Mode</label>
+              <select
+                value={user?.role || 'TRAVELER'}
+                onChange={async (e) => {
+                  const newRole = e.target.value as any;
+                  await updateUser({ role: newRole });
+                  toast.success(`Role changed to ${newRole}`);
+                }}
+                className="w-full bg-[#f9f9fb] border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-black font-semibold focus:outline-none focus:border-black"
+              >
+                <option value="TRAVELER">🧭 Traveler (Trip Planner &amp; Explorer)</option>
+                <option value="OPERATOR">🏢 Tour Operator (Command Center &amp; Bookings)</option>
+                <option value="COORDINATOR">🛡️ Field Coordinator (Guide &amp; Disruption)</option>
+                <option value="ADMIN">⚙️ Platform Admin (System Telemetry)</option>
+              </select>
+            </div>
+
+            <div>
               <label className="block text-xs font-bold text-black mb-1.5">Language Preference</label>
               <select
                 defaultValue="English (US)"

@@ -114,9 +114,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     toast.success('Signed out.');
   };
 
-  const updateUser = (updated: Partial<AuthUser>) => {
+  const updateUser = async (updated: Partial<AuthUser>) => {
     if (user) {
-      setUser({ ...user, ...updated });
+      setUser((prev) => (prev ? { ...prev, ...updated } : prev));
+    }
+    // If role or profile attributes are changed, sync with database and refresh JWT
+    try {
+      if (token && token !== 'offline-demo-token') {
+        const res = await api.auth.updateProfile(updated);
+        if (res.token) {
+          localStorage.setItem('tripweave_token', res.token);
+          setToken(res.token);
+        }
+        if (res.user) {
+          setUser((prev) => (prev ? { ...prev, ...res.user } : res.user));
+        }
+      }
+    } catch (err) {
+      console.warn('Silent sync of user role failed, fallback to local state:', err);
     }
   };
 

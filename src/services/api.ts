@@ -58,7 +58,7 @@ export const api = {
     getProfile: () =>
       request<{ user: AuthUser }>('/users/profile'),
     updateProfile: (data: Partial<AuthUser>) =>
-      request<{ message: string; user: AuthUser }>('/users/profile', {
+      request<{ message: string; user: AuthUser; token?: string }>('/users/profile', {
         method: 'PUT',
         body: JSON.stringify(data),
       }),

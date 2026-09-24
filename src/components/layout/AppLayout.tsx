@@ -86,10 +86,14 @@ export const AppLayout: React.FC = () => {
             </div>
             <select
               value={user?.role || 'TRAVELER'}
-              onChange={(e) => {
+              onChange={async (e) => {
                 const newRole = e.target.value as any;
-                updateUser({ role: newRole });
+                await updateUser({ role: newRole });
                 toast.success(`Switched view to ${newRole}`);
+                if (newRole === 'OPERATOR') navigate('/app/operator');
+                else if (newRole === 'COORDINATOR') navigate('/app/operator/changes');
+                else if (newRole === 'ADMIN') navigate('/app/admin');
+                else navigate('/app/trips');
               }}
               className="text-[11px] font-bold bg-white border border-gray-200 rounded-lg px-2 py-1 outline-none text-black cursor-pointer hover:border-black transition-colors"
             >

@@ -251,7 +251,13 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
       },
     });
 
-    res.json({ message: 'Profile updated successfully.', user });
+    const newToken = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({ message: 'Profile updated successfully.', user, token: newToken });
   } catch (err: any) {
     console.error('Update profile error:', err);
     res.status(500).json({ error: 'Failed to update profile.' });

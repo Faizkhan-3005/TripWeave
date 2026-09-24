@@ -58,27 +58,84 @@ export const LoginPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Quick Demo Pre-fill Banner */}
-          <div className="mb-6 bg-[#e3e2f7] p-3.5 rounded-2xl border border-[#d2d1ee] flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <Sparkles className="w-4 h-4 text-black shrink-0" />
-              <div>
-                <p className="text-xs font-bold text-black">Seeded Demo Account</p>
-                <p className="text-[10px] text-gray-700">demo@tripweave.com</p>
-              </div>
+          {/* Quick Demo Pre-fill & 1-Click Role Switchers */}
+          <div className="mb-6 bg-[#f3f3f6] p-4 rounded-3xl border border-gray-200">
+            <div className="flex items-center gap-2 mb-2.5">
+              <Sparkles className="w-4 h-4 text-purple-600 shrink-0" />
+              <p className="text-xs font-black text-black uppercase tracking-wider">
+                Instant Demo Role Logins
+              </p>
             </div>
-            <div className="flex items-center gap-1.5">
+            <p className="text-[11px] text-gray-500 mb-3 font-medium">
+              Click any role below to immediately sign in as that authenticated user:
+            </p>
+            <div className="grid grid-cols-2 gap-2">
               <button
+                type="button"
                 onClick={async () => {
                   setSubmitting(true);
                   const ok = await login('demo@tripweave.com', 'password123');
                   setSubmitting(false);
-                  if (ok) navigate(from, { replace: true });
+                  if (ok) navigate('/app/trips', { replace: true });
                 }}
-                type="button"
-                className="bg-black text-white text-[11px] font-bold px-3 py-1.5 rounded-xl hover:bg-neutral-800 transition-all cursor-pointer shadow-xs"
+                className="bg-white border border-gray-200 hover:border-black p-2.5 rounded-xl text-left transition-all hover:shadow-xs cursor-pointer group"
               >
-                1-Click Login
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-black">🧭 Traveler</span>
+                  <ArrowRight className="w-3 h-3 text-gray-400 group-hover:text-black group-hover:translate-x-0.5 transition-all" />
+                </div>
+                <span className="text-[10px] text-gray-500 block truncate">demo@tripweave.com</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  setSubmitting(true);
+                  const ok = await login('operator@tripweave.com', 'password123');
+                  setSubmitting(false);
+                  if (ok) navigate('/app/operator', { replace: true });
+                }}
+                className="bg-white border border-gray-200 hover:border-purple-600 p-2.5 rounded-xl text-left transition-all hover:shadow-xs cursor-pointer group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-purple-700">🏢 Operator</span>
+                  <ArrowRight className="w-3 h-3 text-purple-400 group-hover:text-purple-700 group-hover:translate-x-0.5 transition-all" />
+                </div>
+                <span className="text-[10px] text-gray-500 block truncate">operator@tripweave.com</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  setSubmitting(true);
+                  const ok = await login('coordinator@tripweave.com', 'password123');
+                  setSubmitting(false);
+                  if (ok) navigate('/app/operator/changes', { replace: true });
+                }}
+                className="bg-white border border-gray-200 hover:border-blue-600 p-2.5 rounded-xl text-left transition-all hover:shadow-xs cursor-pointer group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-blue-700">🛡️ Coordinator</span>
+                  <ArrowRight className="w-3 h-3 text-blue-400 group-hover:text-blue-700 group-hover:translate-x-0.5 transition-all" />
+                </div>
+                <span className="text-[10px] text-gray-500 block truncate">coordinator@tripweave.com</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  setSubmitting(true);
+                  const ok = await login('admin@tripweave.com', 'password123');
+                  setSubmitting(false);
+                  if (ok) navigate('/app/admin', { replace: true });
+                }}
+                className="bg-white border border-gray-200 hover:border-black p-2.5 rounded-xl text-left transition-all hover:shadow-xs cursor-pointer group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-black">⚙️ Admin</span>
+                  <ArrowRight className="w-3 h-3 text-gray-400 group-hover:text-black group-hover:translate-x-0.5 transition-all" />
+                </div>
+                <span className="text-[10px] text-gray-500 block truncate">admin@tripweave.com</span>
               </button>
             </div>
           </div>

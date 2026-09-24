@@ -37,6 +37,22 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Root Route
+app.get('/', (req, res) => {
+  res.send(`
+    <html>
+      <head><title>Tripweave API</title></head>
+      <body style="font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 90vh; background: #fafafa;">
+        <h1 style="margin-bottom: 8px;">Tripweave PS7 Backend API</h1>
+        <p style="color: #666; margin-bottom: 24px;">The API server is running on port 5001.</p>
+        <a href="http://localhost:3000" style="padding: 12px 24px; background: #000; color: #fff; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 14px;">
+          Go to Web App (localhost:3000) &rarr;
+        </a>
+      </body>
+    </html>
+  `);
+});
+
 // Health Check
 app.get('/api/health', (req, res) => {
   res.json({
